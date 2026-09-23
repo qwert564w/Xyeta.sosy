@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "faketotem",
+  "version": "${version}",
+  "name": "FakeTotem",
+  "description": "Client-side phantom totem injection for FunTime auction.",
+  "authors": ["ANON"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": { "client": ["com.anon.faketotem.FakeTotemMod"] },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "1.21.4",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
