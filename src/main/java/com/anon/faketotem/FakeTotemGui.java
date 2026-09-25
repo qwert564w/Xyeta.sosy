@@ -15,15 +15,18 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-import java.lang.reflect.Field;
 import java.util.List;
 
 public class FakeTotemGui {
 
+    // \u041a\u0440\u0443\u0448\u0438\u0442\u0435\u043b\u044c = рушитель
+    // \u041a\u0430\u0440\u0430\u0442\u0435\u043b\u044c = аратель
+    // \u0422\u0435\u043d\u044c = Тень
+    // \u2605 = ★ (Star)
     private static final List<Talisman> TALISMANS = List.of(
-            new Talisman("§k|§r §6★ §4§lТалисман рушителя", "§7Сносит тотем врага", 1001, 50000),
-            new Talisman("§k█§r §c★ §5§lТалисман арателя", "§7ыжигает инвентарь", 1002, 75000),
-            new Talisman("§ki§r §b★ §3§lТалисман Тени", "§7Скрывает от радаров", 1003, 120000)
+            new Talisman("\u00a7k|\u00a7r \u00a76\u2605 \u00a74\u00a7l\u0422\u0430\u043b\u0438\u0441\u043c\u0430\u043d \u041a\u0440\u0443\u0448\u0438\u0442\u0435\u043b\u044c", "\u00a77\u0421\u043d\u043e\u0441\u0438\u0442 \u0442\u043e\u0442\u0435\u043c \u0432\u0440\u0430\u0433\u0430", 1001, 50000),
+            new Talisman("\u00a7k\u2588\u00a7r \u00a7c\u2605 \u00a75\u00a7l\u0422\u0430\u043b\u0438\u0441\u043c\u0430\u043d \u041a\u0430\u0440\u0430\u0442\u0435\u043b\u044c", "\u00a77\u0412\u044b\u0436\u0438\u0433\u0430\u0435\u0442 \u0438\u043d\u0432\u0435\u043d\u0442\u0430\u0440\u044c", 1002, 75000),
+            new Talisman("\u00a7ki\u00a7r \u00a7b\u2605 \u00a73\u00a7l\u0422\u0430\u043b\u0438\u0441\u043c\u0430\u043d \u0422\u0435\u043d\u044c", "\u00a77\u0421\u043a\u0440\u044b\u0432\u0430\u0435\u0442 \u043e\u0442 \u0440\u0430\u0434\u0430\u0440\u043e\u0432", 1003, 120000)
     );
 
     private static long lastSellTime = 0;
@@ -40,38 +43,10 @@ public class FakeTotemGui {
                     button -> sellFakeTotem(talisman)
             ).dimensions(x, y, 110, 20).build();
             
-            // ефлексия для добавления виджета, так как addDrawableChild protected
-            addChildViaReflection(screen, btn);
+            // Теперь этот метод публичный благодаря AccessWidener
+            screen.addDrawableChild(btn);
             y += 24;
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void addChildViaReflection(Object screenObj, ButtonWidget widget) {
-        try {
-            Field field = getFieldRecursively(screenObj.getClass(), "children");
-            if (field != null) {
-                field.setAccessible(true);
-                List<Object> children = (List<Object>) field.get(screenObj);
-                if (children != null) {
-                    children.add(widget);
-                    return;
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("[FakeTotem] Reflection failed: " + e.getMessage());
-        }
-    }
-
-    private static Field getFieldRecursively(Class<?> clazz, String fieldName) {
-        while (clazz != null) {
-            try {
-                return clazz.getDeclaredField(fieldName);
-            } catch (NoSuchFieldException e) {
-                clazz = clazz.getSuperclass();
-            }
-        }
-        return null;
     }
 
     private static void sellFakeTotem(Talisman talisman) {
@@ -80,13 +55,13 @@ public class FakeTotemGui {
 
         long now = System.currentTimeMillis();
         if (now - lastSellTime < 3600000L) {
-            client.player.sendMessage(Text.literal("§c[FakeTotem] улдаун 1 час."), false);
+            client.player.sendMessage(Text.literal("\u00a7c[FakeTotem] \u041a\u0443\u043b\u0434\u0430\u0443\u043d 1 \u0447\u0430\u0441."), false);
             return;
         }
 
         ItemStack mainHand = client.player.getMainHandStack();
         if (!mainHand.isOf(Items.TOTEM_OF_UNDYING)) {
-            client.player.sendMessage(Text.literal("§c[FakeTotem] озьми обычный тотем."), false);
+            client.player.sendMessage(Text.literal("\u00a7c[FakeTotem] \u0412\u043e\u0437\u044c\u043c\u0438 \u043e\u0431\u044b\u0447\u043d\u044b\u0439 \u0442\u043e\u0442\u0435\u043c."), false);
             return;
         }
 
@@ -98,10 +73,7 @@ public class FakeTotemGui {
 
         mainHand.set(DataComponentTypes.CUSTOM_NAME, parsedName);
         mainHand.set(DataComponentTypes.LORE, new LoreComponent(List.of(parsedLore)));
-        
-        // С: спользуем CustomModelDataComponent вместо int
         mainHand.set(DataComponentTypes.CUSTOM_MODEL_DATA, new CustomModelDataComponent(talisman.modelData()));
-        
         mainHand.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true);
 
         NbtComponent existingCustomData = mainHand.get(DataComponentTypes.CUSTOM_DATA);
@@ -126,7 +98,7 @@ public class FakeTotemGui {
         
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
-            if (c == '§' && i + 1 < text.length()) {
+            if (c == '\u00a7' && i + 1 < text.length()) {
                 char code = text.charAt(i + 1);
                 Formatting formatting = Formatting.byCode(code);
                 if (formatting != null) {
