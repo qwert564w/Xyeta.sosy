@@ -15,9 +15,7 @@ def loaderVersion = providers.gradleProperty('loaderVersion').getOrElse('0.16.9'
 
 repositories {
     mavenCentral()
-    maven {
-        url = 'https://maven.fabricmc.net/'
-    }
+    maven { url = 'https://maven.fabricmc.net/' }
 }
 
 dependencies {
@@ -25,6 +23,11 @@ dependencies {
     mappings "net.fabricmc:yarn:1.21.4+build.1:v2"
     modImplementation "net.fabricmc:fabric-loader:${loaderVersion}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}"
+}
+
+// одключаем Access Widener
+loom {
+    accessWidenerPath = file("src/main/resources/faketotem.accesswidener")
 }
 
 processResources {
@@ -36,6 +39,8 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
     it.options.release = 21
+    // ринудительно устанавливаем кодировку UTF-8 для компилятора
+    it.options.encoding = 'UTF-8'
 }
 
 java {
